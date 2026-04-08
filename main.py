@@ -1,24 +1,46 @@
 import pyttsx3
+import pygame
+import time
+import os
+import sys
+
+# encuentra la ubicación entre los archivos y el script para evitar problemas de ruta
+ruta_script = os.path.dirname(os.path.abspath(sys.argv[0]))
+os.chdir(ruta_script)
+
+# inicializar el mezclador de audio
+pygame.mixer.init()
 
 VOICE_INDEX = 0 
 RATE = 150
 
 def hablar(texto):
-    """Reinicia el motor en cada llamada para asegurar que lea todo."""
+    #voz del computador 
     print("\n" + str(texto))
     try:
         engine = pyttsx3.init()
         voices = engine.getProperty('voices')
         if len(voices) > VOICE_INDEX:
             engine.setProperty('voice', voices[VOICE_INDEX].id)
-        
         engine.setProperty('rate', RATE)
         engine.say(str(texto))
         engine.runAndWait()
-        # Liberamos el motor para la siguiente frase
         engine.stop() 
     except Exception as e:
         print(f"Error de voz: {e}")
+
+def reproducir_y_esperar(archivo):
+    #reproducir el audio y esperar a que termine antes de continuar
+    try:
+        if not os.path.exists(archivo):
+            print(f"ALERTA: El archivo {archivo} no está en: {os.getcwd()}")
+            return
+        pygame.mixer.music.load(archivo)
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            time.sleep(0.5)
+    except Exception as e:
+        print(f"Error al reproducir {archivo}: {e}")
 
 def obtener_opcion():
     while True:
@@ -27,7 +49,7 @@ def obtener_opcion():
             return r
         print("Por favor, elige solo A o B.")
 
-# iniciar funcionamiento 
+# iniciar la experiencia
 historial = []
 
 hablar("Bienvenidos.")
@@ -36,9 +58,9 @@ hablar("Yo, como máquina que se encuentra frente a ustedes, tendrán la posibil
 hablar("Donde el sonido modificará el movimiento.")
 hablar("Para dichas intervenciones, seleccionarán A o B con el teclado.")
 hablar("Empecemos.")
-hablar(" 3... 2... 1...")
+hablar("3... 2... 1...")
 
-#Pregunta 1
+# PREGUNTA 1 
 hablar("El sonido altera el cuerpo. ¿Qué afecta primero?")
 hablar("Opción A. La distancia.")
 hablar("Opción B. El tiempo.")
@@ -48,22 +70,51 @@ historial.append(r1.upper())
 
 if r1 == "a":
     hablar("Eligieron la distancia.")
-    hablar("La distancia se deforma.")
-    hablar("Opción A. Es difícil separarse.")
+    reproducir_y_esperar("intervencion_1_distancia.mp3")
+    hablar("La distancia se deforma.") #PREGUNTA 2
+    hablar("Opción A. Es difícil distanciarse. ")
     hablar("Opción B. Es fácil alejarse.")
+    
     r2 = obtener_opcion()
     historial.append(r2.upper())
-    final = "Atracción sonora" if r2 == "a" else "Fuga sonora"
+    
+    if r2 == "a":
+        hablar("Eligieron difícil distanciarse.")
+        reproducir_y_esperar("intervencion_dificil_distanciarse.mp3")
+        final = "Atracción sonora"
+        audio_final = "final_AA_atraccion_sonora.mp3"
+    else:
+        hablar("Eligieron fácil alejarse.")
+        reproducir_y_esperar("intervencion_facil_alejarse.mp3")
+        final = "Fuga sonora"
+        audio_final = "final_AB_fuga_sonora.mp3"
 else:
     hablar("Eligieron el tiempo.")
-    hablar("El tiempo cambia.")
-    hablar("Opción A. Algunas cosas se repiten.")
-    hablar("Opción B. Nada vuelve a ocurrir.")
+    reproducir_y_esperar("intervencion_1_tiempo.mp3")
+    hablar("El tiempo cambia.") #PREGUNTA 3
+    hablar("Opción A. Hay repeticiones.")
+    hablar("Opción B. Nunca es igual.")
+    
     r2 = obtener_opcion()
     historial.append(r2.upper())
-    final = "Eco corporal" if r2 == "a" else "Tirmpo inestable"
+    
+    if r2 == "a":
+        hablar("Eligieron repetición.")
+        reproducir_y_esperar("intervencion_2_repeticion.mp3")
+        final = "Eco corporal"
+        audio_final = "final_BA_eco_corporal.mp3"
+    else:
+        hablar("Eligieron nunca es igual.")
+        reproducir_y_esperar("intervencion_nunca_es_igual.mp3")
+        final = "Tiempo inestable"
+        audio_final = "final_BB_tiempo_inestable.mp3"
 
-# Final codigo
+# Antes de reproducir el audio final, hacemos un resumen de las decisiones tomadas
 camino_texto = " luego ".join(historial)
 hablar(f"Sus decisiones fueron: {camino_texto}")
 hablar(f"Resultado final: {final}")
+
+time.sleep(1)
+reproducir_y_esperar(audio_final)
+
+hablar("La experiencia ha terminado. Muchas gracias por construir con nosotres esta pieza.")
